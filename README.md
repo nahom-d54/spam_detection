@@ -84,11 +84,13 @@ spam_detection/
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    cd spam_detection
    ```
 
 2. **Place ML model files**
+
    ```bash
    # Copy your trained model files to the models/ directory
    # - models/spam_classifier_model.joblib
@@ -96,11 +98,13 @@ spam_detection/
    ```
 
 3. **Configure environment variables**
+
    ```bash
    cp .env.example .env
    ```
-   
+
    Edit `.env` and update:
+
    - `IMAP_HOST` and `IMAP_PORT` - Your IMAP server details
    - `SMTP_HOST` and `SMTP_PORT` - Your SMTP server details
    - `JWT_SECRET_KEY` - Generate with: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
@@ -124,26 +128,31 @@ The API will be available at `http://localhost:8000`
 ### Running Locally
 
 1. **Install dependencies**
+
    ```bash
    pip install -e .
    ```
 
 2. **Start PostgreSQL and Redis**
+
    ```bash
    docker-compose up -d postgres redis
    ```
 
 3. **Run database migrations** (after setting up Alembic)
+
    ```bash
    alembic upgrade head
    ```
 
 4. **Start FastAPI server**
+
    ```bash
    uvicorn app.main:app --reload
    ```
 
 5. **Start Celery worker** (in another terminal)
+
    ```bash
    celery -A app.workers worker --loglevel=info
    ```
@@ -156,18 +165,21 @@ The API will be available at `http://localhost:8000`
 ## API Documentation
 
 Once running, visit:
+
 - **Swagger UI**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
 ### Key Endpoints
 
 #### Authentication
+
 - `POST /auth/register` - Register new user
 - `POST /auth/login` - Login and get JWT tokens
 - `POST /auth/refresh` - Refresh access token
 - `POST /auth/logout` - Logout and stop monitoring
 
 #### Email Management
+
 - `GET /emails` - List emails with pagination
 - `GET /emails/{email_id}` - Get email details
 - `PUT /emails/{email_id}/read` - Mark as read/unread
@@ -178,12 +190,14 @@ Once running, visit:
 - `GET /emails/folders/list` - List all folders
 
 #### Monitoring
+
 - `GET /monitoring/sse` - SSE endpoint for real-time updates
 - `GET /monitoring/status` - Get monitoring status
 
 ## Usage Example
 
 ### 1. Register User
+
 ```bash
 curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
@@ -195,6 +209,7 @@ curl -X POST http://localhost:8000/auth/register \
 ```
 
 ### 2. Login
+
 ```bash
 curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
@@ -205,6 +220,7 @@ curl -X POST http://localhost:8000/auth/login \
 ```
 
 Response:
+
 ```json
 {
   "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
@@ -214,22 +230,24 @@ Response:
 ```
 
 ### 3. List Emails
+
 ```bash
 curl -X GET http://localhost:8000/emails?folder=INBOX&limit=10 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 ### 4. Connect to SSE for Real-time Updates
+
 ```javascript
-const eventSource = new EventSource('http://localhost:8000/monitoring/sse', {
+const eventSource = new EventSource("http://localhost:8000/monitoring/sse", {
   headers: {
-    'Authorization': 'Bearer YOUR_ACCESS_TOKEN'
-  }
+    Authorization: "Bearer YOUR_ACCESS_TOKEN",
+  },
 });
 
-eventSource.addEventListener('email_event', (event) => {
+eventSource.addEventListener("email_event", (event) => {
   const data = JSON.parse(event.data);
-  console.log('New email event:', data);
+  console.log("New email event:", data);
 });
 ```
 
@@ -246,11 +264,13 @@ eventSource.addEventListener('email_event', (event) => {
 ## ML Model
 
 The spam classifier uses:
+
 - **TF-IDF Vectorization** - Text feature extraction
 - **Preprocessing** - Lowercase, remove numbers/punctuation, lemmatization, stop word removal
 - **Classification** - Pre-trained scikit-learn model
 
 Place these files in `models/`:
+
 - `spam_classifier_model.joblib`
 - `tfidf_vectorizer.joblib`
 
@@ -302,6 +322,7 @@ pytest
 ## Production Deployment
 
 1. **Generate secure keys**:
+
    ```bash
    python -c "import secrets; print(secrets.token_urlsafe(32))"
    python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
@@ -320,17 +341,21 @@ pytest
 ## Troubleshooting
 
 ### Model files not found
+
 - Ensure `spam_classifier_model.joblib` and `tfidf_vectorizer.joblib` are in `models/` directory
 
 ### IMAP connection failed
+
 - Verify `IMAP_HOST` and `IMAP_PORT` in `.env`
 - Check if your email provider requires app-specific passwords (Gmail, Outlook)
 
 ### Celery worker not processing tasks
+
 - Ensure Redis is running: `docker-compose ps redis`
 - Check worker logs: `docker-compose logs celery_worker`
 
 ### SSE connection issues
+
 - Verify Redis pub/sub is working
 - Check CORS configuration in `.env`
 
@@ -340,10 +365,9 @@ Connect your Next.js frontend:
 
 ```typescript
 // Connect to SSE
-const eventSource = new EventSource(
-  `http://localhost:8000/monitoring/sse`,
-  { headers: { Authorization: `Bearer ${accessToken}` }}
-);
+const eventSource = new EventSource(`http://localhost:8000/monitoring/sse`, {
+  headers: { Authorization: `Bearer ${accessToken}` },
+});
 
 eventSource.onmessage = (event) => {
   const data = JSON.parse(event.data);
@@ -354,6 +378,16 @@ eventSource.onmessage = (event) => {
 ## License
 
 MIT
+
+## GROUP MEMBERS
+
+---
+
+| Name         | ID           |
+| ------------ | ------------ |
+| Nahom Dereje | UGR/26395/14 |
+
+---
 
 ## Contributing
 
