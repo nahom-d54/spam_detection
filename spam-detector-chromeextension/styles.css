@@ -1,0 +1,26 @@
+.spam-badge {
+    display: inline-block;
+    border: 1px solid #d93025; /* Gmail red */
+    color: #d93025;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    vertical-align: middle;
+    background-color: rgba(217, 48, 37, 0.05); /* Very light red background */
+    font-family: "Google Sans", Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+}
+.not-spam-badge {
+    display: inline-block;
+    border: 1px solid #34a853; /* Gmail green */
+    color: #34a853;
+    border-radius: 4px;
+    padding: 1px 5px;
+    margin-left: 10px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    vertical-align: middle;
+    background-color: rgba(52, 168, 83, 0.05); /* Very light green background */
+    font-family: "Google Sans", Roboto, RobotoDraft, Helvetica, Arial, sans-serif;
+}

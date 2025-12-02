@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Gmail Spam Detector",
+  "version": "1.0",
+  "description": "Detects spam in Gmail emails and displays a confidence score.",
+  "host_permissions": ["https://mail.google.com/*", "http://localhost:8000/*"],
+  "action": {
+    "default_popup": "index.html",
+    "default_title": "Spam Detector"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["assets/content.js"],
+      "css": ["assets/content.css"]
+    }
+  ]
+}
