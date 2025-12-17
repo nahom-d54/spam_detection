@@ -1,11 +1,14 @@
 """Main FastAPI application."""
+
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from contextlib import asynccontextmanager
+
+from app.api import auth, emails, monitoring, users
 from app.core.config import get_settings
 from app.database import init_db
-from app.api import auth, emails, monitoring
 from app.services.spam_classifier import get_spam_classifier
 
 settings = get_settings()
@@ -16,11 +19,11 @@ async def lifespan(app: FastAPI):
     """Application lifespan manager."""
     # Startup
     print("🚀 Starting Spam Detection API...")
-    
+
     # Initialize database
     print("📦 Initializing database...")
     init_db()
-    
+
     # Initialize spam classifier (loads model and NLTK data)
     print("🤖 Loading spam classification model...")
     try:
@@ -29,11 +32,11 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️  Warning: Could not load spam classifier: {e}")
         print("   Make sure model files are in the models/ directory")
-    
+
     print("✓ Application started successfully")
-    
+
     yield
-    
+
     # Shutdown
     print("👋 Shutting down Spam Detection API...")
 
@@ -43,13 +46,13 @@ app = FastAPI(
     title=settings.APP_NAME,
     version=settings.APP_VERSION,
     description="IMAP-integrated spam detection service with ML classification",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],#settings.CORS_ORIGINS,
+    allow_origins=["*"],  # settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,8 +67,8 @@ async def global_exception_handler(request: Request, exc: Exception):
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": "Internal server error",
-            "detail": str(exc) if settings.DEBUG else "An unexpected error occurred"
-        }
+            "detail": str(exc) if settings.DEBUG else "An unexpected error occurred",
+        },
     )
 
 
@@ -76,7 +79,7 @@ async def health_check():
     return {
         "status": "healthy",
         "app_name": settings.APP_NAME,
-        "version": settings.APP_VERSION
+        "version": settings.APP_VERSION,
     }
 
 
@@ -88,7 +91,7 @@ async def root():
         "message": "Spam Detection API",
         "version": settings.APP_VERSION,
         "docs": "/docs",
-        "health": "/health"
+        "health": "/health",
     }
 
 
@@ -96,13 +99,10 @@ async def root():
 app.include_router(auth.router)
 app.include_router(emails.router)
 app.include_router(monitoring.router)
+app.include_router(users.router)
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "app.main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=settings.DEBUG
-    )
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=settings.DEBUG)

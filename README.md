@@ -80,6 +80,7 @@ spam_detection/
 - Python 3.12+
 - Docker and Docker Compose (recommended)
 - ML model files (spam_classifier_model.joblib, tfidf_vectorizer.joblib)
+- argon2-cffi (recommended) - used for password hashing (install via pip)
 
 ### Installation
 
@@ -109,6 +110,8 @@ spam_detection/
    - `SMTP_HOST` and `SMTP_PORT` - Your SMTP server details
    - `JWT_SECRET_KEY` - Generate with: `python -c "import secrets; print(secrets.token_urlsafe(32))"`
    - `FERNET_KEY` - Generate with: `python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"`
+
+Note: The API limits registration password length to a maximum of 256 characters to avoid hashing and resource issues. If you have a very long password, shorten it or switch to a passphrase that meets this limit.
 
 ### Running with Docker (Recommended)
 
@@ -181,9 +184,10 @@ Once running, visit:
 #### Email Management
 
 - `GET /emails` - List emails with pagination
-- `GET /emails/{email_id}` - Get email details
+- `GET /emails/{email_id}` - Get email details (includes spam detection results)
 - `PUT /emails/{email_id}/read` - Mark as read/unread
 - `POST /emails/{email_id}/move` - Move to folder
+- `POST /emails/{email_id}/confirm-spam` - Confirm spam and move to spam folder
 - `DELETE /emails/{email_id}` - Delete email
 - `POST /emails/send` - Send new email
 - `POST /emails/{email_id}/reply` - Reply to email
@@ -193,6 +197,13 @@ Once running, visit:
 
 - `GET /monitoring/sse` - SSE endpoint for real-time updates
 - `GET /monitoring/status` - Get monitoring status
+
+#### Users
+
+- `GET /users/me` - Get current user profile
+- `GET /users/me/stats` - Get user statistics (email counts, spam detected, etc.)
+- `PUT /users/me` - Update user profile (email)
+- `POST /users/me/password` - Change user password (requires old_password and new_password)
 
 ## Usage Example
 
@@ -234,6 +245,24 @@ Response:
 ```bash
 curl -X GET http://localhost:8000/emails?folder=INBOX&limit=10 \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### 5. User profile and password
+
+Get profile:
+
+```bash
+curl -X GET http://localhost:8000/users/me \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Change password:
+
+```bash
+curl -X POST http://localhost:8000/users/me/password \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"old_password": "oldpass123", "new_password": "newpass456"}'
 ```
 
 ### 4. Connect to SSE for Real-time Updates
@@ -297,7 +326,7 @@ EMAIL_CHECK_INTERVAL_SECONDS=120  # Check every 2 minutes
 
 - ✅ JWT-based authentication with token expiration
 - ✅ Fernet encryption for IMAP passwords in database
-- ✅ bcrypt password hashing for API authentication
+- ✅ Argon2 password hashing for API authentication (bcrypt still supported for existing hashes)
 - ✅ HTTPS recommended for production
 - ✅ CORS configuration for trusted origins
 - ⚠️ Generate strong secret keys in production
@@ -355,6 +384,16 @@ pytest
 - Check worker logs: `docker-compose logs celery_worker`
 
 ### SSE connection issues
+
+### Password hashing error: ValueError: password cannot be longer than 72 bytes
+
+- Cause: This happens when the password hashing routine uses bcrypt and the provided password is longer than the bcrypt maximum of 72 bytes.
+- Fixes:
+
+  - We now use Argon2 for new password hashes (Argon2 supports longer inputs). Ensure `argon2-cffi` is installed in your environment: `pip install argon2-cffi`.
+  - If you're seeing this error during registration, shorten the password to 256 characters or less (the API enforces this limit by default).
+  - If you're seeing this during login and your account was previously created with bcrypt and your password is longer than 72 bytes, you'll need to reset your password to something shorter — bcrypt cannot verify longer inputs.
+  - Admin option: If you need to migrate users, ask users to reset their passwords so their new passwords will be hashed with Argon2 automatically.
 
 - Verify Redis pub/sub is working
 - Check CORS configuration in `.env`
