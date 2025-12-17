@@ -77,7 +77,7 @@ async def get_email(
             email = imap.get_email_detail(email_id, folder=folder)
 
         # Run spam detection
-        email_text = f"{email['subject']} {email.get('body_plain', '') or ''} {email.get('body_html', '') or ''}"
+        email_text = f"{email['subject']} {email.get('body_plain', '')}"
         _classifier_instance = get_spam_classifier()
         is_spam, confidence = _classifier_instance.predict_with_confidence(email_text)
 
