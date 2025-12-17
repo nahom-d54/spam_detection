@@ -10,7 +10,7 @@ services:
       POSTGRES_PASSWORD: spam_pass
       POSTGRES_DB: spam_detection
     ports:
-      - "5432:5432"
+      - "5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -18,13 +18,15 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - spam_detection_network
 
   # Redis
   redis:
     image: redis:7-alpine
     container_name: spam_detection_redis
     ports:
-      - "6379:6379"
+      - "6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -32,6 +34,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - spam_detection_network
 
   # FastAPI Application
   api:
@@ -41,7 +45,7 @@ services:
     container_name: spam_detection_api
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "8000:8000"
+      - "8000"
     volumes:
       - .:/app
       - ./models:/app/models
@@ -55,6 +59,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    networks:
+      - spam_detection_network
 
   # Celery Worker
   celery_worker:
@@ -74,6 +80,8 @@ services:
     depends_on:
       - postgres
       - redis
+    networks:
+      - spam_detection_network
 
   # Celery Beat (Periodic Tasks Scheduler)
   celery_beat:
@@ -92,7 +100,12 @@ services:
     depends_on:
       - postgres
       - redis
+    networks:
+      - spam_detection_network
 
 volumes:
   postgres_data:
   redis_data:
+networks:
+  spam_detection_network:
+    driver: bridge
