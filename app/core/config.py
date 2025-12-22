@@ -41,9 +41,9 @@ class Settings(BaseSettings):
     # Email Monitoring
     EMAIL_CHECK_INTERVAL_SECONDS: int = 120  # Check every 2 minutes
 
-    # ML Model Paths
-    SPAM_MODEL_PATH: str = "models/spam_classifier_model.joblib"
-    VECTORIZER_PATH: str = "models/tfidf_vectorizer.joblib"
+    # ML Model Configuration
+    # Model types: 'nb' (Naive Bayes) or 'lr' (Logistic Regression)
+    SPAM_MODEL_TYPE: str = "lr"  # Default to Logistic Regression for best performance
 
     # CORS
     CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001"]
