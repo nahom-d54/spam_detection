@@ -1,8 +1,11 @@
 """Email management API endpoints."""
 
 from typing import List, Optional
+from unittest import result
 
+from bs4 import BeautifulSoup
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from scipy.fft import ifftn
 from sqlalchemy.orm import Session
 
 from app.core.deps import get_current_user
@@ -27,6 +30,22 @@ from app.services.smtp_service import SMTPService
 from app.services.spam_classifier import get_spam_classifier
 
 router = APIRouter(prefix="/emails", tags=["Emails"])
+
+
+def extract_text_from_html(html: str) -> str:
+    try:
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Remove non-visible elements
+        for tag in soup(["script", "style", "noscript", "header", "footer", "nav"]):
+            tag.decompose()
+
+        text = soup.get_text(separator=" ", strip=True)
+        return text
+
+    except Exception as e:
+        # Fallback: return empty string or log error
+        return ""
 
 
 @router.get("", response_model=List[EmailMetadata])
@@ -280,10 +299,19 @@ async def detect_spam(payload: SpamDetectionRequest):
         from app.services.spam_classifier import get_spam_classifier
 
         # Combine subject and body for classification
-        email_text = (
-            f"{payload.subject} {payload.body_plain or ''} {payload.body_html or ''}"
-        )
+        # try to parse html to text if possible and use either the html or the body_palin
+        email_text = ""
+        if payload.body_plain:
+            email_text = payload.body_plain
+        elif payload.body_html:
+            result = extract_text_from_html(payload.body_html)
+            if not result:
+                raise HTTPException(
+                    status_code=status.HTTP_406_NOT_ACCEPTABLE,
+                    detail="A valid email body is required for spam detection.",
+                )
 
+            email_text = result
         # Get spam classifier and predict
 
         _classifier_instance = get_spam_classifier()

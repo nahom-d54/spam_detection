@@ -26,4 +26,5 @@ dependencies = [
     "redis>=5.0.1",
     "python-dotenv>=1.0.0",
     "pydantic-settings>=2.1.0",
+    "bs4>=0.0.2",
 ]
